@@ -1,4 +1,5 @@
 ﻿using InsuranceManagement.Application.DTOs.InsurancePolicies;
+using InsuranceManagement.Application.Interfaces;
 using InsuranceManagement.Application.Interfaces.Repositories;
 using InsuranceManagement.Application.Interfaces.Services;
 using InsuranceManagement.Domain.Entities;
@@ -10,13 +11,16 @@ public class InsurancePolicyService : IInsurancePolicyService
 {
     private readonly IInsurancePolicyRepository _policyRepository;
     private readonly ICustomerRepository _customerRepository;
+    private readonly IInsuranceProductRepository _productRepository;
 
     public InsurancePolicyService(
         IInsurancePolicyRepository policyRepository,
-        ICustomerRepository customerRepository)
+        ICustomerRepository customerRepository,
+        IInsuranceProductRepository productRepository)
     {
         _policyRepository = policyRepository;
         _customerRepository = customerRepository;
+        _productRepository = productRepository;
     }
 
     public async Task<List<InsurancePolicyDto>> GetAllAsync(
@@ -48,7 +52,6 @@ public class InsurancePolicyService : IInsurancePolicyService
         CancellationToken cancellationToken = default)
     {
         ValidatePolicy(
-            request.InsuranceType,
             request.StartDate,
             request.EndDate,
             request.Premium);
@@ -59,11 +62,23 @@ public class InsurancePolicyService : IInsurancePolicyService
         if (customer == null)
             throw new KeyNotFoundException("Customer not found.");
 
+        var product = await _productRepository.GetByIdAsync(
+            request.ProductId);
+
+        if (product == null)
+            throw new KeyNotFoundException("Insurance product not found.");
+
+        if (!product.IsActive)
+            throw new InvalidOperationException(
+                "Cannot create policy with an inactive product.");
+
         var policy = new InsurancePolicy
         {
             PolicyNumber = await GeneratePolicyNumberAsync(cancellationToken),
             CustomerId = request.CustomerId,
-            InsuranceType = request.InsuranceType.Trim(),
+            ProductId = product.Id,
+            Product = product,
+            InsuranceType = product.InsuranceType,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             Premium = request.Premium,
@@ -85,7 +100,6 @@ public class InsurancePolicyService : IInsurancePolicyService
             throw new ArgumentException("Invalid policy ID.");
 
         ValidatePolicy(
-            request.InsuranceType,
             request.StartDate,
             request.EndDate,
             request.Premium);
@@ -96,7 +110,19 @@ public class InsurancePolicyService : IInsurancePolicyService
         if (policy == null)
             throw new KeyNotFoundException("Insurance policy not found.");
 
-        policy.InsuranceType = request.InsuranceType.Trim();
+        var product = await _productRepository.GetByIdAsync(
+            request.ProductId);
+
+        if (product == null)
+            throw new KeyNotFoundException("Insurance product not found.");
+
+        if (!product.IsActive)
+            throw new InvalidOperationException(
+                "Cannot assign an inactive product to a policy.");
+
+        policy.ProductId = product.Id;
+        policy.Product = product;
+        policy.InsuranceType = product.InsuranceType;
         policy.StartDate = request.StartDate;
         policy.EndDate = request.EndDate;
         policy.Premium = request.Premium;
@@ -140,14 +166,10 @@ public class InsurancePolicyService : IInsurancePolicyService
     }
 
     private static void ValidatePolicy(
-        string insuranceType,
         DateTime startDate,
         DateTime endDate,
         decimal premium)
     {
-        if (string.IsNullOrWhiteSpace(insuranceType))
-            throw new ArgumentException("Insurance type is required.");
-
         if (startDate >= endDate)
             throw new ArgumentException(
                 "End date must be later than start date.");
@@ -164,7 +186,11 @@ public class InsurancePolicyService : IInsurancePolicyService
             Id = policy.Id,
             PolicyNumber = policy.PolicyNumber,
             CustomerId = policy.CustomerId,
-            InsuranceType = policy.InsuranceType,
+            ProductId = policy.ProductId,
+            ProductCode = policy.Product?.ProductCode ?? string.Empty,
+            ProductName = policy.Product?.ProductName ?? string.Empty,
+            InsuranceType = policy.Product?.InsuranceType
+                ?? policy.InsuranceType,
             StartDate = policy.StartDate,
             EndDate = policy.EndDate,
             Premium = policy.Premium,

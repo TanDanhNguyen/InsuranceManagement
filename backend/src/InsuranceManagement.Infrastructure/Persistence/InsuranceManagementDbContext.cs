@@ -13,6 +13,7 @@ public class InsuranceManagementDbContext : DbContext
 
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<InsurancePolicy> InsurancePolicies => Set<InsurancePolicy>();
+    public DbSet<InsuranceProduct> InsuranceProducts => Set<InsuranceProduct>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

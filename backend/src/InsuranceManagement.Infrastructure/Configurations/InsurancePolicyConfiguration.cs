@@ -1,8 +1,6 @@
-﻿using InsuranceManagement.Domain.Entities;
+﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace InsuranceManagement.Infrastructure.Persistence.Configurations;
 
 public class InsurancePolicyConfiguration
     : IEntityTypeConfiguration<InsurancePolicy>
@@ -38,6 +36,12 @@ public class InsurancePolicyConfiguration
         builder.HasOne(x => x.Customer)
             .WithMany()
             .HasForeignKey(x => x.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Relationship with InsuranceProduct
+        builder.HasOne(x => x.Product)
+            .WithMany()
+            .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

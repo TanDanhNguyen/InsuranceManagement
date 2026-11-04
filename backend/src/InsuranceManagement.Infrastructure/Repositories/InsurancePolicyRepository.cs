@@ -19,6 +19,7 @@ public class InsurancePolicyRepository : IInsurancePolicyRepository
     {
         return await _context.InsurancePolicies
             .AsNoTracking()
+            .Include(x => x.Product)
             .OrderByDescending(x => x.CreatedAtUtc)
             .ToListAsync(cancellationToken);
     }
@@ -28,7 +29,10 @@ public class InsurancePolicyRepository : IInsurancePolicyRepository
         CancellationToken cancellationToken = default)
     {
         return await _context.InsurancePolicies
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            .Include(x => x.Product)
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
     }
 
     public async Task AddAsync(

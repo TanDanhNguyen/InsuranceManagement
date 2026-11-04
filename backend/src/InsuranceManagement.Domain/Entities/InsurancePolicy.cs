@@ -1,6 +1,6 @@
-﻿using InsuranceManagement.Domain.Enums;
-
-namespace InsuranceManagement.Domain.Entities;
+﻿
+using InsuranceManagement.Domain.Entities;
+using InsuranceManagement.Domain.Enums;
 
 public class InsurancePolicy
 {
@@ -9,6 +9,8 @@ public class InsurancePolicy
     public string PolicyNumber { get; set; } = string.Empty;
 
     public int CustomerId { get; set; }
+
+    public int ProductId { get; set; }
 
     public string InsuranceType { get; set; } = string.Empty;
 
@@ -22,6 +24,8 @@ public class InsurancePolicy
 
     public DateTime CreatedAtUtc { get; set; }
 
-    // Navigation property
+    // Navigation properties
     public Customer Customer { get; set; } = null!;
+
+    public InsuranceProduct Product { get; set; } = null!;
 }

@@ -69,7 +69,53 @@ namespace InsuranceManagement.Infrastructure.Persistence.Migrations
                     b.ToTable("Customers", (string)null);
                 });
 
-            modelBuilder.Entity("InsuranceManagement.Domain.Entities.InsurancePolicy", b =>
+            modelBuilder.Entity("InsuranceManagement.Domain.Entities.InsuranceProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BasePremium")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("InsuranceType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductCode")
+                        .IsUnique();
+
+                    b.ToTable("InsuranceProducts", (string)null);
+                });
+
+            modelBuilder.Entity("InsurancePolicy", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -100,6 +146,9 @@ namespace InsuranceManagement.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -115,10 +164,12 @@ namespace InsuranceManagement.Infrastructure.Persistence.Migrations
                     b.HasIndex("PolicyNumber")
                         .IsUnique();
 
+                    b.HasIndex("ProductId");
+
                     b.ToTable("InsurancePolicies", (string)null);
                 });
 
-            modelBuilder.Entity("InsuranceManagement.Domain.Entities.InsurancePolicy", b =>
+            modelBuilder.Entity("InsurancePolicy", b =>
                 {
                     b.HasOne("InsuranceManagement.Domain.Entities.Customer", "Customer")
                         .WithMany()
@@ -126,7 +177,15 @@ namespace InsuranceManagement.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("InsuranceManagement.Domain.Entities.InsuranceProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Customer");
+
+                    b.Navigation("Product");
                 });
 #pragma warning restore 612, 618
         }

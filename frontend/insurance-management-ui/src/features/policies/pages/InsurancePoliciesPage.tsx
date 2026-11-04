@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -45,6 +44,9 @@ export default function InsurancePoliciesPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [modalOpen, setModalOpen] = useState(false);
 
+  const [selectedPolicy, setSelectedPolicy] =
+    useState<InsurancePolicy | null>(null);
+
   const loadPolicies = async () => {
     setLoading(true);
 
@@ -64,11 +66,9 @@ export default function InsurancePoliciesPage() {
   }, []);
 
   const handleCreate = () => {
+    setSelectedPolicy(null);
     setModalOpen(true);
   };
-
-  const [selectedPolicy, setSelectedPolicy] =
-    useState<InsurancePolicy | null>(null);
 
   const handleSubmit = async (
     values: InsurancePolicyRequest | UpdateInsurancePolicyRequest
@@ -110,6 +110,8 @@ export default function InsurancePoliciesPage() {
     return policies.filter((policy) => {
       const matchesSearch =
         policy.policyNumber.toLowerCase().includes(keyword) ||
+        policy.productCode.toLowerCase().includes(keyword) ||
+        policy.productName.toLowerCase().includes(keyword) ||
         policy.insuranceType.toLowerCase().includes(keyword);
 
       const matchesStatus =
@@ -145,9 +147,20 @@ export default function InsurancePoliciesPage() {
       render: (id: number) => `CUS-${String(id).padStart(3, "0")}`,
     },
     {
+      title: "Product Code",
+      dataIndex: "productCode",
+      key: "productCode",
+    },
+    {
+      title: "Product Name",
+      dataIndex: "productName",
+      key: "productName",
+    },
+    {
       title: "Insurance Type",
       dataIndex: "insuranceType",
       key: "insuranceType",
+      render: (value: string) => <Tag color="blue">{value}</Tag>,
     },
     {
       title: "Start Date",
@@ -197,8 +210,7 @@ export default function InsurancePoliciesPage() {
             type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
-          >
-          </Button>
+          />
 
           <Popconfirm
             title="Delete this insurance policy?"
@@ -212,8 +224,7 @@ export default function InsurancePoliciesPage() {
               type="link"
               danger
               icon={<DeleteOutlined />}
-            >
-            </Button>
+            />
           </Popconfirm>
         </Space>
       ),
@@ -243,7 +254,7 @@ export default function InsurancePoliciesPage() {
         >
           <Space wrap>
             <Input
-              placeholder="Search policy number or type..."
+              placeholder="Search policy number or product..."
               prefix={<SearchOutlined />}
               allowClear
               value={search}
@@ -285,7 +296,7 @@ export default function InsurancePoliciesPage() {
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} policies`,
           }}
-          scroll={{ x: 1100 }}
+          scroll={{ x: 1400 }}
         />
       </Card>
 

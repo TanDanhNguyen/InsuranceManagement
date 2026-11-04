@@ -51,7 +51,7 @@ export default function MainLayout() {
       label: "Customers",
     },
     {
-      key: "/products",
+      key: "/insurance-products",
       icon: <SafetyCertificateOutlined />,
       label: "Insurance Products",
     },

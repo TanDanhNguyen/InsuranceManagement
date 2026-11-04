@@ -1,9 +1,7 @@
-
 import { useEffect, useState } from "react";
 
 import {
   Form,
-  Input,
   InputNumber,
   Modal,
   Select,
@@ -14,6 +12,7 @@ import {
 import dayjs, { type Dayjs } from "dayjs";
 
 import type { Customer } from "../../customers/types/customer";
+import type { InsuranceProduct } from "../../products/types/insuranceProduct";
 
 import type {
   InsurancePolicy,
@@ -22,6 +21,7 @@ import type {
 } from "../types/insurancePolicy";
 
 import { customerService } from "../../customers/services/customerService";
+import insuranceProductService from "../../products/services/insuranceProductService";
 
 interface InsurancePolicyFormProps {
   open: boolean;
@@ -34,7 +34,7 @@ interface InsurancePolicyFormProps {
 
 interface FormValues {
   customerId?: number;
-  insuranceType: string;
+  productId: number;
   startDate: Dayjs;
   endDate: Dayjs;
   premium: number;
@@ -49,7 +49,10 @@ export default function InsurancePolicyForm({
   const [form] = Form.useForm<FormValues>();
 
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [products, setProducts] = useState<InsuranceProduct[]>([]);
+
   const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const isEdit = !!policy;
@@ -59,7 +62,7 @@ export default function InsurancePolicyForm({
 
     if (policy) {
       form.setFieldsValue({
-        insuranceType: policy.insuranceType,
+        productId: policy.productId,
         startDate: dayjs(policy.startDate),
         endDate: dayjs(policy.endDate),
         premium: policy.premium,
@@ -68,23 +71,35 @@ export default function InsurancePolicyForm({
       form.resetFields();
     }
 
-    const loadCustomers = async () => {
-      if (policy) return;
-
-      setLoadingCustomers(true);
+    const loadData = async () => {
+      setLoadingProducts(true);
 
       try {
-        const data = await customerService.getAll();
-        setCustomers(data);
+        const data = await insuranceProductService.getAll();
+        setProducts(data);
       } catch (error) {
-        console.error("Failed to load customers:", error);
-        message.error("Failed to load customers");
+        console.error("Failed to load products:", error);
+        message.error("Failed to load insurance products");
       } finally {
-        setLoadingCustomers(false);
+        setLoadingProducts(false);
+      }
+
+      if (!policy) {
+        setLoadingCustomers(true);
+
+        try {
+          const data = await customerService.getAll();
+          setCustomers(data);
+        } catch (error) {
+          console.error("Failed to load customers:", error);
+          message.error("Failed to load customers");
+        } finally {
+          setLoadingCustomers(false);
+        }
       }
     };
 
-    void loadCustomers();
+    void loadData();
   }, [open, policy, form]);
 
   const handleFinish = async (values: FormValues) => {
@@ -92,7 +107,7 @@ export default function InsurancePolicyForm({
 
     try {
       const commonValues = {
-        insuranceType: values.insuranceType,
+        productId: values.productId,
         startDate: values.startDate.format("YYYY-MM-DD"),
         endDate: values.endDate.format("YYYY-MM-DD"),
         premium: values.premium,
@@ -155,20 +170,31 @@ export default function InsurancePolicyForm({
         )}
 
         <Form.Item
-          label="Insurance Type"
-          name="insuranceType"
+          label="Insurance Product"
+          name="productId"
           rules={[
             {
               required: true,
-              message: "Please enter insurance type",
-            },
-            {
-              max: 100,
-              message: "Maximum 100 characters",
+              message: "Please select an insurance product",
             },
           ]}
         >
-          <Input placeholder="e.g. Health Insurance" />
+          <Select
+            placeholder="Select insurance product"
+            loading={loadingProducts}
+            showSearch
+            optionFilterProp="label"
+            options={products
+              .filter(
+                (product) =>
+                  product.isActive ||
+                  product.id === policy?.productId
+              )
+              .map((product) => ({
+                label: `${product.productCode} - ${product.productName}`,
+                value: product.id,
+              }))}
+          />
         </Form.Item>
 
         <Form.Item

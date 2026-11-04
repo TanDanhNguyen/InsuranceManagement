@@ -1,4 +1,5 @@
-﻿using InsuranceManagement.Application.Interfaces.Repositories;
+﻿using InsuranceManagement.Application.Interfaces;
+using InsuranceManagement.Application.Interfaces.Repositories;
 using InsuranceManagement.Infrastructure.Persistence;
 using InsuranceManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IInsurancePolicyRepository, InsurancePolicyRepository>();
+        services.AddScoped<IInsuranceProductRepository,InsuranceProductRepository>();
 
         return services;
     }

@@ -8,6 +8,9 @@ export interface InsurancePolicy {
   id: number;
   policyNumber: string;
   customerId: number;
+  productId: number;
+  productCode: string;
+  productName: string;
   insuranceType: string;
   startDate: string;
   endDate: string;
@@ -18,14 +21,14 @@ export interface InsurancePolicy {
 
 export interface InsurancePolicyRequest {
   customerId: number;
-  insuranceType: string;
+  productId: number;
   startDate: string;
   endDate: string;
   premium: number;
 }
 
 export interface UpdateInsurancePolicyRequest {
-  insuranceType: string;
+  productId: number;
   startDate: string;
   endDate: string;
   premium: number;
